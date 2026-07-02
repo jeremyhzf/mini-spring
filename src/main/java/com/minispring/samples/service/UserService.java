@@ -3,15 +3,16 @@ package com.minispring.samples.service;
 import com.minispring.samples.repository.UserRepository;
 
 /**
- * 用户服务类
+ * 用户服务类 - 支持构造器注入
  */
 public class UserService {
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    // 通过Setter注入（目前阶段2才实现，这里先手动设置）
-    public void setUserRepository(UserRepository userRepository) {
+    // 构造器注入
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
+        System.out.println("UserService创建完成，依赖已注入: " + userRepository.getClass().getSimpleName());
     }
 
     public void createUser(String username) {
@@ -19,5 +20,9 @@ public class UserService {
         if (userRepository != null) {
             userRepository.save(username);
         }
+    }
+
+    public UserRepository getUserRepository() {
+        return userRepository;
     }
 }
