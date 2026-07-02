@@ -1,5 +1,6 @@
 package com.minispring.factory;
 
+import com.minispring.test.BeanWithoutNoArgConstructor;
 import com.minispring.test.SimpleBean;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -74,6 +75,17 @@ public class BeanContainerTest {
 
         assertThrows(IllegalArgumentException.class, () -> {
             container.registerBean("testBean", null);
+        });
+    }
+
+    @Test
+    void shouldThrowExceptionWhenNoNoArgConstructor() {
+        BeanContainer container = new DefaultBeanContainer();
+
+        container.registerBean("noArgBean", BeanWithoutNoArgConstructor.class);
+
+        assertThrows(RuntimeException.class, () -> {
+            container.getBean("noArgBean");
         });
     }
 }
