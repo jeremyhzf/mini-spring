@@ -40,4 +40,40 @@ public class BeanContainerTest {
 
         assertSame(bean1, bean2, "应该返回同一个实例");
     }
+
+    @Test
+    void shouldThrowExceptionWhenBeanNotFound() {
+        BeanContainer container = new DefaultBeanContainer();
+
+        assertThrows(BeanNotFoundException.class, () -> {
+            container.getBean("nonExistentBean");
+        });
+    }
+
+    @Test
+    void shouldThrowExceptionWhenNameIsNull() {
+        BeanContainer container = new DefaultBeanContainer();
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            container.registerBean(null, SimpleBean.class);
+        });
+    }
+
+    @Test
+    void shouldThrowExceptionWhenNameIsEmpty() {
+        BeanContainer container = new DefaultBeanContainer();
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            container.registerBean("", SimpleBean.class);
+        });
+    }
+
+    @Test
+    void shouldThrowExceptionWhenClassIsNull() {
+        BeanContainer container = new DefaultBeanContainer();
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            container.registerBean("testBean", null);
+        });
+    }
 }
