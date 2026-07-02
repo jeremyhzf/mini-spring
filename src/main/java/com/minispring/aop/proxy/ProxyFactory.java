@@ -62,7 +62,7 @@ public class ProxyFactory {
      */
     private Object createJdkProxy() {
         return Proxy.newProxyInstance(
-            getClass().getClassLoader(),
+            target.getClass().getClassLoader(),
             interfaces,
             (proxy, method, args) -> {
                 MethodInvocation invocation = new MethodInvocation() {
@@ -103,12 +103,22 @@ public class ProxyFactory {
 
     /**
      * 应用所有增强
+     * 执行顺序：BeforeAdvice -> AroundAdvice -> 目标方法 -> AfterAdvice
      */
     private Object applyAdvices(MethodInvocation invocation) throws Throwable {
-        // 创建责任链
-        MethodInvocation chain = invocation;
+        // 1. 执行所有BeforeAdvice
+        for (Advice advice : advices) {
+            if (advice instanceof BeforeAdvice) {
+                ((BeforeAdvice) advice).before(
+                    invocation.getMethod(),
+                    invocation.getArguments(),
+                    invocation.getTarget()
+                );
+            }
+        }
 
-        // 反向遍历，构建责任链
+        // 2. 构建AroundAdvice责任链
+        MethodInvocation chain = invocation;
         for (int i = advices.size() - 1; i >= 0; i--) {
             final Advice advice = advices.get(i);
             final MethodInvocation next = chain;
@@ -118,7 +128,29 @@ public class ProxyFactory {
             }
         }
 
-        return chain.proceed();
+        // 3. 执行责任链（包含所有AroundAdvice和目标方法）
+        Object returnValue = null;
+        Throwable exception = null;
+        try {
+            returnValue = chain.proceed();
+            return returnValue;
+        } catch (Throwable t) {
+            exception = t;
+            throw t;
+        } finally {
+            // 4. 执行所有AfterAdvice（无论成功还是异常）
+            for (Advice advice : advices) {
+                if (advice instanceof AfterAdvice) {
+                    ((AfterAdvice) advice).after(
+                        invocation.getMethod(),
+                        invocation.getArguments(),
+                        invocation.getTarget(),
+                        returnValue,
+                        exception
+                    );
+                }
+            }
+        }
     }
 
     /**
