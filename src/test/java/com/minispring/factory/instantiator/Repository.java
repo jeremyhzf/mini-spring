@@ -1,3 +1,8 @@
 package com.minispring.factory.instantiator;
 
-public interface Repository {}
+/**
+ * Repository接口 - 用于测试
+ */
+public interface Repository {
+    void save(Object entity);
+}

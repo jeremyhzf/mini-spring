@@ -2,8 +2,10 @@ package com.minispring.factory;
 
 import com.minispring.factory.dependency.DependencyResolver;
 import com.minispring.factory.instantiator.ConstructorResolver;
+import com.minispring.factory.instantiator.SetterInjector;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,6 +31,7 @@ public class DefaultBeanContainer implements BeanContainer {
     private final Map<String, Class<?>> beanDefinitions = new HashMap<>();
 
     private final ConstructorResolver constructorResolver = new ConstructorResolver();
+    private final SetterInjector setterInjector = new SetterInjector();
     private DependencyResolver dependencyResolver;
 
     @Override
@@ -83,14 +86,20 @@ public class DefaultBeanContainer implements BeanContainer {
         Constructor<?> constructor = constructorResolver.resolve(clazz);
         Class<?>[] parameterTypes = constructor.getParameterTypes();
 
+        Object bean;
         if (parameterTypes.length == 0) {
             // 无参构造器
-            return constructor.newInstance();
+            bean = constructor.newInstance();
         } else {
             // 有参构造器 - 需要注入依赖
             Object[] args = resolveDependencies(parameterTypes);
-            return constructor.newInstance(args);
+            bean = constructor.newInstance(args);
         }
+
+        // 执行Setter注入（如果有相应的Bean定义）
+        performSetterInjection(bean);
+
+        return bean;
     }
 
     /**
@@ -105,5 +114,40 @@ public class DefaultBeanContainer implements BeanContainer {
             args[i] = dependencyResolver.resolve(parameterTypes[i]);
         }
         return args;
+    }
+
+    /**
+     * 执行Setter注入
+     *
+     * @param bean 目标Bean
+     */
+    private void performSetterInjection(Object bean) {
+        // 查找所有Setter方法
+        Method[] methods = bean.getClass().getMethods();
+
+        for (Method method : methods) {
+            if (isSetterMethod(method)) {
+                Class<?> paramType = method.getParameterTypes()[0];
+                try {
+                    Object dependency = dependencyResolver.resolve(paramType);
+                    method.invoke(bean, dependency);
+                } catch (Exception e) {
+                    // Setter注入失败不影响Bean创建
+                    // 依赖可能不存在，跳过
+                }
+            }
+        }
+    }
+
+    /**
+     * 判断是否是Setter方法
+     *
+     * @param method 要检查的方法
+     * @return 如果是Setter方法返回true
+     */
+    private boolean isSetterMethod(Method method) {
+        return method.getName().startsWith("set") &&
+               method.getParameterCount() == 1 &&
+               method.getReturnType() == void.class;
     }
 }
