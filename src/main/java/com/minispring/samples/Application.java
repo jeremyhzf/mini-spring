@@ -1,40 +1,30 @@
 package com.minispring.samples;
 
-import com.minispring.factory.BeanContainer;
 import com.minispring.factory.DefaultBeanContainer;
-import com.minispring.samples.lifecycle.LoggingPostProcessor;
-import com.minispring.samples.lifecycle.UserService;
-import com.minispring.samples.repository.UserRepository;
+import com.minispring.samples.annotation.UserService;
 
 /**
- * Mini-Spring示例应用 - 阶段3
- * 演示Bean生命周期管理
+ * Mini-Spring示例应用 - 阶段4
+ * 演示注解驱动开发
  */
 public class Application {
 
     public static void main(String[] args) {
-        System.out.println("=== Mini-Spring 示例应用 (阶段3 - 生命周期) ===");
+        System.out.println("=== Mini-Spring 示例应用 (阶段4 - 注解驱动) ===");
         System.out.println();
 
-        BeanContainer container = new DefaultBeanContainer();
+        DefaultBeanContainer container = new DefaultBeanContainer();
 
-        // 注册后处理器
-        ((DefaultBeanContainer) container).registerBeanPostProcessor(new LoggingPostProcessor());
+        // 扫描组件
+        System.out.println("--- 扫描组件 ---");
+        int count = container.scanComponents("com.minispring.samples.annotation");
+        System.out.println("扫描到 " + count + " 个组件");
 
-        // 注册Bean
-        container.registerBean("userRepository", UserRepository.class);
-        container.registerBean("userService", UserService.class);
-
-        System.out.println("--- 获取UserService Bean ---");
-        UserService userService = (UserService) container.getBean("userService");
-
+        // 获取并使用UserService
         System.out.println();
         System.out.println("--- 使用UserService ---");
-        userService.createUser("王五");
-
-        System.out.println();
-        System.out.println("--- 销毁容器 ---");
-        ((DefaultBeanContainer) container).destroy();
+        UserService userService = (UserService) container.getBean("userService");
+        userService.createUser("赵六");
 
         System.out.println();
         System.out.println("=== 应用运行完成 ===");
