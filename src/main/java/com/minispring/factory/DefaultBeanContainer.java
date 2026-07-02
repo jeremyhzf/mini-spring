@@ -26,6 +26,9 @@ import java.util.Set;
 import com.minispring.scanner.ClassPathBeanScanner;
 import com.minispring.annotation.Autowired;
 import com.minispring.annotation.Qualifier;
+import com.minispring.annotation.Value;
+import com.minispring.env.Environment;
+import com.minispring.env.StandardEnvironment;
 
 /**
  * 默认的Bean容器实现
@@ -62,6 +65,8 @@ public class DefaultBeanContainer implements BeanContainer {
     private final ScopeRegistry scopeRegistry = new ScopeRegistry();
     // Bean作用域映射
     private final Map<String, String> beanScopes = new HashMap<>();
+    // 环境
+    private Environment environment;
 
     @Override
     public void registerBean(String name, Class<?> clazz) {
@@ -167,6 +172,9 @@ public class DefaultBeanContainer implements BeanContainer {
 
         // 执行字段注入
         performFieldInjection(bean);
+
+        // 执行@Value注入
+        performValueInjection(bean);
 
         // 执行后处理器前置处理
         bean = applyPostProcessBeforeInitialization(bean);
@@ -373,5 +381,60 @@ public class DefaultBeanContainer implements BeanContainer {
      */
     public Map<String, Class<?>> getBeanDefinitions() {
         return new HashMap<>(beanDefinitions);
+    }
+
+    /**
+     * 设置环境
+     */
+    public void setEnvironment(Environment environment) {
+        this.environment = environment;
+    }
+
+    /**
+     * 获取环境
+     */
+    public Environment getEnvironment() {
+        if (environment == null) {
+            environment = new StandardEnvironment();
+        }
+        return environment;
+    }
+
+    /**
+     * 执行@Value注入
+     */
+    private void performValueInjection(Object bean) throws Exception {
+        Class<?> clazz = bean.getClass();
+
+        for (Field field : clazz.getDeclaredFields()) {
+            if (field.isAnnotationPresent(Value.class)) {
+                Value value = field.getAnnotation(Value.class);
+                String resolvedValue = getEnvironment().resolvePlaceholders(value.value());
+
+                field.setAccessible(true);
+
+                // 类型转换
+                Object convertedValue = convertValue(resolvedValue, field.getType());
+                field.set(bean, convertedValue);
+            }
+        }
+    }
+
+    /**
+     * 类型转换
+     */
+    private Object convertValue(String value, Class<?> targetType) {
+        if (targetType == String.class) {
+            return value;
+        } else if (targetType == int.class || targetType == Integer.class) {
+            return Integer.parseInt(value);
+        } else if (targetType == long.class || targetType == Long.class) {
+            return Long.parseLong(value);
+        } else if (targetType == boolean.class || targetType == Boolean.class) {
+            return Boolean.parseBoolean(value);
+        } else if (targetType == double.class || targetType == Double.class) {
+            return Double.parseDouble(value);
+        }
+        throw new IllegalArgumentException("Unsupported type: " + targetType);
     }
 }

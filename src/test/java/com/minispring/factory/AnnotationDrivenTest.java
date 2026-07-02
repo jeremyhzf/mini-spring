@@ -1,6 +1,7 @@
 package com.minispring.factory;
 
 import com.minispring.annotation.Autowired;
+import com.minispring.annotation.Value;
 import com.minispring.stereotype.Component;
 import com.minispring.stereotype.Repository;
 import org.junit.jupiter.api.Test;
@@ -43,5 +44,25 @@ public class AnnotationDrivenTest {
     static class TestService {
         @Autowired
         private TestRepository repository;
+    }
+
+    @Test
+    void shouldSupportValueInjection() {
+        DefaultBeanContainer container = new DefaultBeanContainer();
+        container.getEnvironment().setProperty("app.name", "MiniSpring");
+
+        container.registerBean("bean", TestValueBean.class);
+
+        TestValueBean bean = (TestValueBean) container.getBean("bean");
+        assertEquals("MiniSpring", bean.getAppName());
+    }
+
+    static class TestValueBean {
+        @Value("${app.name}")
+        private String appName;
+
+        public String getAppName() {
+            return appName;
+        }
     }
 }
