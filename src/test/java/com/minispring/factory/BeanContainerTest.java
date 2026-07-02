@@ -1,6 +1,9 @@
 package com.minispring.factory;
 
 import com.minispring.test.BeanWithoutNoArgConstructor;
+import com.minispring.test.Repository;
+import com.minispring.test.RepositoryImpl;
+import com.minispring.test.ServiceWithDependency;
 import com.minispring.test.SimpleBean;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -86,6 +89,35 @@ public class BeanContainerTest {
 
         assertThrows(RuntimeException.class, () -> {
             container.getBean("noArgBean");
+        });
+    }
+
+    @Test
+    void shouldInjectDependenciesViaConstructor() {
+        BeanContainer container = new DefaultBeanContainer();
+
+        // 注册依赖
+        container.registerBean("repository", RepositoryImpl.class);
+        // 注册需要依赖的Bean
+        container.registerBean("service", ServiceWithDependency.class);
+
+        // 获取Service，其依赖应该被自动注入
+        ServiceWithDependency service = (ServiceWithDependency) container.getBean("service");
+
+        assertNotNull(service);
+        assertNotNull(service.getRepository());
+        assertTrue(service.getRepository() instanceof RepositoryImpl);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenDependencyNotFound() {
+        BeanContainer container = new DefaultBeanContainer();
+
+        // 注册需要依赖的Bean，但不注册依赖
+        container.registerBean("service", ServiceWithDependency.class);
+
+        assertThrows(BeanNotFoundException.class, () -> {
+            container.getBean("service");
         });
     }
 }
