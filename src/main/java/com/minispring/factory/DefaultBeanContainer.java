@@ -15,11 +15,17 @@ import com.minispring.factory.scope.SingletonAnnotation;
 import com.minispring.factory.scope.PrototypeAnnotation;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import com.minispring.scanner.ClassPathBeanScanner;
+import com.minispring.annotation.Autowired;
+import com.minispring.annotation.Qualifier;
 
 /**
  * 默认的Bean容器实现
@@ -159,6 +165,9 @@ public class DefaultBeanContainer implements BeanContainer {
         // 执行Setter注入（如果有相应的Bean定义）
         performSetterInjection(bean);
 
+        // 执行字段注入
+        performFieldInjection(bean);
+
         // 执行后处理器前置处理
         bean = applyPostProcessBeforeInitialization(bean);
 
@@ -203,6 +212,50 @@ public class DefaultBeanContainer implements BeanContainer {
                 } catch (Exception e) {
                     // Setter注入失败不影响Bean创建
                     // 依赖可能不存在，跳过
+                }
+            }
+        }
+    }
+
+    /**
+     * 执行字段注入（@Autowired）
+     *
+     * @param bean 目标Bean
+     * @throws Exception 注入失败时抛出异常
+     */
+    private void performFieldInjection(Object bean) throws Exception {
+        Class<?> clazz = bean.getClass();
+
+        for (Field field : clazz.getDeclaredFields()) {
+            if (field.isAnnotationPresent(Autowired.class)) {
+                Autowired autowired = field.getAnnotation(Autowired.class);
+
+                try {
+                    // 获取限定符
+                    String qualifier = null;
+                    if (field.isAnnotationPresent(Qualifier.class)) {
+                        qualifier = field.getAnnotation(Qualifier.class).value();
+                    }
+
+                    // 解析依赖
+                    Object dependency;
+                    if (qualifier != null) {
+                        dependency = getBean(qualifier);
+                    } else {
+                        if (dependencyResolver == null) {
+                            dependencyResolver = new DependencyResolver(this);
+                        }
+                        dependency = dependencyResolver.resolve(field.getType());
+                    }
+
+                    // 设置字段值
+                    field.setAccessible(true);
+                    field.set(bean, dependency);
+                } catch (BeanNotFoundException e) {
+                    if (autowired.required()) {
+                        throw e;
+                    }
+                    // 非必须的依赖，跳过
                 }
             }
         }
@@ -291,5 +344,34 @@ public class DefaultBeanContainer implements BeanContainer {
         if (clazz.isAnnotationPresent(PrototypeAnnotation.class)) {
             setBeanScope(beanName, "prototype");
         }
+    }
+
+    /**
+     * 扫描指定包并注册所有组件
+     *
+     * @param basePackage 要扫描的包名
+     * @return 注册的组件数量
+     */
+    public int scanComponents(String basePackage) {
+        ClassPathBeanScanner scanner = new ClassPathBeanScanner(basePackage);
+        Set<Class<?>> components = scanner.scan();
+
+        int count = 0;
+        for (Class<?> component : components) {
+            String beanName = scanner.generateBeanName(component);
+            registerBean(beanName, component);
+            count++;
+        }
+
+        return count;
+    }
+
+    /**
+     * 获取Bean定义映射（用于依赖解析）
+     *
+     * @return Bean定义映射
+     */
+    public Map<String, Class<?>> getBeanDefinitions() {
+        return new HashMap<>(beanDefinitions);
     }
 }

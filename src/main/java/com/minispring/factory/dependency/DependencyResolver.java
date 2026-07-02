@@ -35,6 +35,27 @@ public class DependencyResolver {
      * @return 匹配的Bean实例
      */
     private Object resolveByType(Class<?> type) {
+        // 如果容器是DefaultBeanContainer，可以获取Bean定义信息
+        if (container instanceof com.minispring.factory.DefaultBeanContainer) {
+            com.minispring.factory.DefaultBeanContainer defaultContainer =
+                (com.minispring.factory.DefaultBeanContainer) container;
+
+            // 尝试按类型名称查找
+            String beanName = generateBeanName(type);
+            try {
+                return container.getBean(beanName);
+            } catch (BeanNotFoundException e) {
+                // 如果按名称找不到，尝试按类型查找所有Bean定义
+                java.util.Map<String, Class<?>> beanDefinitions = defaultContainer.getBeanDefinitions();
+                for (java.util.Map.Entry<String, Class<?>> entry : beanDefinitions.entrySet()) {
+                    if (type.isAssignableFrom(entry.getValue())) {
+                        return container.getBean(entry.getKey());
+                    }
+                }
+                throw new BeanNotFoundException("No bean found for type: " + type.getName());
+            }
+        }
+
         // 尝试按类型名称查找
         String beanName = generateBeanName(type);
         try {
