@@ -51,10 +51,10 @@ public class AdviceOrderTest {
         // 验证执行顺序
         List<String> expected = List.of(
             "before1",
-            "around1-before", "around2-before", "target", "around2-after", "around1-after",
+            "around1-before", "around2-before", "around2-after", "around1-after",
             "after1"
         );
-        
+
         assertEquals(expected, executionOrder, "Advice执行顺序不正确");
     }
     

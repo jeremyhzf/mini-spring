@@ -13,6 +13,8 @@ import com.minispring.factory.scope.SingletonScope;
 import com.minispring.factory.scope.ScopeAnnotation;
 import com.minispring.factory.scope.SingletonAnnotation;
 import com.minispring.factory.scope.PrototypeAnnotation;
+import com.minispring.aop.proxy.ProxyFactory;
+import com.minispring.aop.Advisor;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -67,6 +69,8 @@ public class DefaultBeanContainer implements BeanContainer {
     private final Map<String, String> beanScopes = new HashMap<>();
     // 环境
     private Environment environment;
+    // AOP代理工厂
+    private final ProxyFactory proxyFactory = new ProxyFactory();
 
     @Override
     public void registerBean(String name, Class<?> clazz) {
@@ -184,6 +188,9 @@ public class DefaultBeanContainer implements BeanContainer {
 
         // 执行后处理器后置处理
         bean = applyPostProcessAfterInitialization(bean);
+
+        // 应用AOP代理（如果有）
+        bean = applyAopProxy(bean, clazz);
 
         return bean;
     }
@@ -436,5 +443,28 @@ public class DefaultBeanContainer implements BeanContainer {
             return Double.parseDouble(value);
         }
         throw new IllegalArgumentException("Unsupported type: " + targetType);
+    }
+
+    /**
+     * 添加全局Advisor
+     */
+    public void addAdvisor(Advisor advisor) {
+        proxyFactory.addAdvisor(advisor);
+    }
+
+    /**
+     * 应用AOP代理
+     */
+    private Object applyAopProxy(Object bean, Class<?> clazz) throws Exception {
+        // 检查是否有Advisor需要应用到这个Bean
+        // 简化实现：如果有Advisor就创建代理
+        if (proxyFactory.hasAdvisors()) {
+            ProxyFactory factory = new ProxyFactory();
+            factory.setTarget(bean);
+            factory.setInterfaces(clazz.getInterfaces());
+            factory.addAdvisors(proxyFactory.getAdvisors());
+            return factory.getProxy();
+        }
+        return bean;
     }
 }

@@ -1,5 +1,9 @@
 package com.minispring.aop.proxy;
 
+import com.minispring.aop.Advisor;
+import com.minispring.aop.Pointcut;
+import com.minispring.aop.ClassFilter;
+import com.minispring.aop.MethodMatcher;
 import com.minispring.aop.advice.AroundAdvice;
 import com.minispring.aop.advice.BeforeAdvice;
 import com.minispring.aop.advice.AfterAdvice;
@@ -20,6 +24,7 @@ public class ProxyFactory {
     private Object target;
     private Class<?>[] interfaces;
     private final List<Advice> advices = new ArrayList<>();
+    private final List<Advisor> advisors = new ArrayList<>();
 
     /**
      * 设置目标对象
@@ -41,6 +46,38 @@ public class ProxyFactory {
     public void addAdvice(Advice advice) {
         if (advice != null) {
             advices.add(advice);
+        }
+    }
+
+    /**
+     * 添加通知器
+     */
+    public void addAdvisor(Advisor advisor) {
+        if (advisor != null) {
+            advisors.add(advisor);
+        }
+    }
+
+    /**
+     * 检查是否有Advisor
+     */
+    public boolean hasAdvisors() {
+        return !advisors.isEmpty();
+    }
+
+    /**
+     * 获取所有Advisors
+     */
+    public List<Advisor> getAdvisors() {
+        return new ArrayList<>(advisors);
+    }
+
+    /**
+     * 添加多个Advisors
+     */
+    public void addAdvisors(List<Advisor> advisors) {
+        if (advisors != null) {
+            this.advisors.addAll(advisors);
         }
     }
 
@@ -119,12 +156,34 @@ public class ProxyFactory {
 
         // 2. 构建AroundAdvice责任链
         MethodInvocation chain = invocation;
+        Method method = invocation.getMethod();
+        Class<?> targetClass = invocation.getTarget().getClass();
+
+        // 首先处理直接添加的Advice
         for (int i = advices.size() - 1; i >= 0; i--) {
             final Advice advice = advices.get(i);
             final MethodInvocation next = chain;
 
             if (advice instanceof AroundAdvice) {
                 chain = new ChainInvocation(next, (AroundAdvice) advice);
+            }
+        }
+
+        // 然后处理Advisor（只应用匹配的增强）
+        for (int i = advisors.size() - 1; i >= 0; i--) {
+            Advisor advisor = advisors.get(i);
+            Pointcut pointcut = advisor.getPointcut();
+
+            // 检查是否匹配
+            if (pointcut.getClassFilter().matches(targetClass) &&
+                pointcut.getMethodMatcher().matches(method, targetClass)) {
+
+                Advice advice = advisor.getAdvice();
+                MethodInvocation next = chain;
+
+                if (advice instanceof AroundAdvice) {
+                    chain = new ChainInvocation(next, (AroundAdvice) advice);
+                }
             }
         }
 
