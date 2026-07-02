@@ -10,6 +10,9 @@ import com.minispring.factory.lifecycle.BeanPostProcessor;
 import com.minispring.factory.scope.ScopeRegistry;
 import com.minispring.factory.scope.Scope;
 import com.minispring.factory.scope.SingletonScope;
+import com.minispring.factory.scope.ScopeAnnotation;
+import com.minispring.factory.scope.SingletonAnnotation;
+import com.minispring.factory.scope.PrototypeAnnotation;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -63,6 +66,9 @@ public class DefaultBeanContainer implements BeanContainer {
             throw new IllegalArgumentException("Bean class cannot be null");
         }
         beanDefinitions.put(name, clazz);
+
+        // 解析作用域注解
+        parseScopeAnnotation(name, clazz);
     }
 
     /**
@@ -259,5 +265,31 @@ public class DefaultBeanContainer implements BeanContainer {
             }
         }
         beans.clear();
+    }
+
+    /**
+     * 解析作用域注解
+     *
+     * @param beanName Bean名称
+     * @param clazz Bean类型
+     */
+    private void parseScopeAnnotation(String beanName, Class<?> clazz) {
+        // 检查@ScopeAnnotation注解
+        ScopeAnnotation scopeAnnotation = clazz.getAnnotation(ScopeAnnotation.class);
+        if (scopeAnnotation != null) {
+            setBeanScope(beanName, scopeAnnotation.value());
+            return;
+        }
+
+        // 检查@SingletonAnnotation注解
+        if (clazz.isAnnotationPresent(SingletonAnnotation.class)) {
+            setBeanScope(beanName, "singleton");
+            return;
+        }
+
+        // 检查@PrototypeAnnotation注解
+        if (clazz.isAnnotationPresent(PrototypeAnnotation.class)) {
+            setBeanScope(beanName, "prototype");
+        }
     }
 }
