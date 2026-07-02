@@ -4,10 +4,15 @@ import com.minispring.factory.dependency.CircularDependencyDetector;
 import com.minispring.factory.dependency.DependencyResolver;
 import com.minispring.factory.instantiator.ConstructorResolver;
 import com.minispring.factory.instantiator.SetterInjector;
+import com.minispring.factory.lifecycle.InitializingBean;
+import com.minispring.factory.lifecycle.DisposableBean;
+import com.minispring.factory.lifecycle.BeanPostProcessor;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,6 +44,8 @@ public class DefaultBeanContainer implements BeanContainer {
     private DependencyResolver dependencyResolver;
     // 循环依赖检测器
     private final CircularDependencyDetector circularDependencyDetector = new CircularDependencyDetector();
+    // Bean后处理器列表
+    private final List<BeanPostProcessor> postProcessors = new ArrayList<>();
 
     @Override
     public void registerBean(String name, Class<?> clazz) {
@@ -49,6 +56,17 @@ public class DefaultBeanContainer implements BeanContainer {
             throw new IllegalArgumentException("Bean class cannot be null");
         }
         beanDefinitions.put(name, clazz);
+    }
+
+    /**
+     * 注册Bean后处理器
+     *
+     * @param postProcessor 后处理器
+     */
+    public void registerBeanPostProcessor(BeanPostProcessor postProcessor) {
+        if (postProcessor != null) {
+            postProcessors.add(postProcessor);
+        }
     }
 
     @Override
@@ -118,6 +136,15 @@ public class DefaultBeanContainer implements BeanContainer {
         // 执行Setter注入（如果有相应的Bean定义）
         performSetterInjection(bean);
 
+        // 执行后处理器前置处理
+        bean = applyPostProcessBeforeInitialization(bean);
+
+        // 执行初始化回调
+        applyInitializingBean(bean);
+
+        // 执行后处理器后置处理
+        bean = applyPostProcessAfterInitialization(bean);
+
         return bean;
     }
 
@@ -168,5 +195,45 @@ public class DefaultBeanContainer implements BeanContainer {
         return method.getName().startsWith("set") &&
                method.getParameterCount() == 1 &&
                method.getReturnType() == void.class;
+    }
+
+    /**
+     * 应用后处理器前置处理
+     */
+    private Object applyPostProcessBeforeInitialization(Object bean) {
+        for (BeanPostProcessor processor : postProcessors) {
+            bean = processor.postProcessBeforeInitialization(bean.getClass().getSimpleName(), bean);
+        }
+        return bean;
+    }
+
+    /**
+     * 应用后处理器后置处理
+     */
+    private Object applyPostProcessAfterInitialization(Object bean) {
+        for (BeanPostProcessor processor : postProcessors) {
+            bean = processor.postProcessAfterInitialization(bean.getClass().getSimpleName(), bean);
+        }
+        return bean;
+    }
+
+    /**
+     * 应用初始化回调
+     */
+    private void applyInitializingBean(Object bean) {
+        if (bean instanceof InitializingBean) {
+            ((InitializingBean) bean).afterPropertiesSet();
+        }
+    }
+
+    /**
+     * 销毁所有单例Bean
+     */
+    public void destroy() {
+        for (Object bean : beans.values()) {
+            if (bean instanceof DisposableBean) {
+                ((DisposableBean) bean).destroy();
+            }
+        }
     }
 }
