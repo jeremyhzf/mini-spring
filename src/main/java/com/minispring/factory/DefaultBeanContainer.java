@@ -1,5 +1,6 @@
 package com.minispring.factory;
 
+import com.minispring.factory.dependency.CircularDependencyDetector;
 import com.minispring.factory.dependency.DependencyResolver;
 import com.minispring.factory.instantiator.ConstructorResolver;
 import com.minispring.factory.instantiator.SetterInjector;
@@ -33,6 +34,7 @@ public class DefaultBeanContainer implements BeanContainer {
     private final ConstructorResolver constructorResolver = new ConstructorResolver();
     private final SetterInjector setterInjector = new SetterInjector();
     private DependencyResolver dependencyResolver;
+    private final CircularDependencyDetector circularDependencyDetector = new CircularDependencyDetector();
 
     @Override
     public void registerBean(String name, Class<?> clazz) {
@@ -66,12 +68,25 @@ public class DefaultBeanContainer implements BeanContainer {
                 dependencyResolver = new DependencyResolver(this);
             }
 
+            // 检测循环依赖
+            circularDependencyDetector.beforeCreation(name);
+
             bean = createBeanWithDependencies(clazz);
             beans.put(name, bean);
+
+            // 创建完成
+            circularDependencyDetector.afterCreation(name);
+
             return bean;
+        } catch (CircularDependencyDetector.CircularDependencyException e) {
+            throw e;
         } catch (BeanNotFoundException e) {
+            // 清理创建状态
+            circularDependencyDetector.afterCreation(name);
             throw e;
         } catch (Exception e) {
+            // 清理创建状态
+            circularDependencyDetector.afterCreation(name);
             throw new RuntimeException("Failed to create bean: " + name, e);
         }
     }
