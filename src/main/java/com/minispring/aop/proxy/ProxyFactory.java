@@ -136,6 +136,10 @@ public class ProxyFactory {
             return returnValue;
         } catch (Throwable t) {
             exception = t;
+            if (t instanceof java.lang.reflect.InvocationTargetException) {
+                exception = t.getCause();  // 解包原始异常给AfterAdvice使用
+                throw exception;  // 抛出原始异常
+            }
             throw t;
         } finally {
             // 4. 执行所有AfterAdvice（无论成功还是异常）
