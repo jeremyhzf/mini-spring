@@ -20,8 +20,21 @@ public class ScopeTest {
 
     @Test
     void shouldReturnDifferentInstanceForPrototype() {
-        BeanContainer container = new DefaultBeanContainer();
+        DefaultBeanContainer container = new DefaultBeanContainer();
         container.registerBean("prototype", PrototypeBean.class);
+        container.setBeanScope("prototype", "prototype");
+
+        Object bean1 = container.getBean("prototype");
+        Object bean2 = container.getBean("prototype");
+
+        assertNotSame(bean1, bean2);
+    }
+
+    @Test
+    void shouldSetBeanScope() {
+        DefaultBeanContainer container = new DefaultBeanContainer();
+        container.registerBean("prototype", PrototypeBean.class);
+        container.setBeanScope("prototype", "prototype");
 
         Object bean1 = container.getBean("prototype");
         Object bean2 = container.getBean("prototype");

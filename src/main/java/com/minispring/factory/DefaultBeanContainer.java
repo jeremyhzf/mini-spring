@@ -7,6 +7,9 @@ import com.minispring.factory.instantiator.SetterInjector;
 import com.minispring.factory.lifecycle.InitializingBean;
 import com.minispring.factory.lifecycle.DisposableBean;
 import com.minispring.factory.lifecycle.BeanPostProcessor;
+import com.minispring.factory.scope.ScopeRegistry;
+import com.minispring.factory.scope.Scope;
+import com.minispring.factory.scope.SingletonScope;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -46,6 +49,10 @@ public class DefaultBeanContainer implements BeanContainer {
     private final CircularDependencyDetector circularDependencyDetector = new CircularDependencyDetector();
     // Bean后处理器列表
     private final List<BeanPostProcessor> postProcessors = new ArrayList<>();
+    // 作用域注册表
+    private final ScopeRegistry scopeRegistry = new ScopeRegistry();
+    // Bean作用域映射
+    private final Map<String, String> beanScopes = new HashMap<>();
 
     @Override
     public void registerBean(String name, Class<?> clazz) {
@@ -69,47 +76,57 @@ public class DefaultBeanContainer implements BeanContainer {
         }
     }
 
+    /**
+     * 设置Bean的作用域
+     *
+     * @param beanName Bean名称
+     * @param scopeName 作用域名称
+     */
+    public void setBeanScope(String beanName, String scopeName) {
+        beanScopes.put(beanName, scopeName);
+    }
+
     @Override
     public Object getBean(String name) {
-        // 首先检查缓存中是否已有实例
+        // 检查是否已有缓存的实例（用于单例）
         Object bean = beans.get(name);
         if (bean != null) {
             return bean;
         }
 
-        // 查找Bean定义
         Class<?> clazz = beanDefinitions.get(name);
         if (clazz == null) {
             throw new BeanNotFoundException(name);
         }
 
-        // 使用反射创建实例
+        // 获取Bean的作用域
+        String scopeName = beanScopes.getOrDefault(name, "singleton");
+        Scope scope = scopeRegistry.getScope(scopeName);
+
         try {
-            // 懒初始化DependencyResolver
             if (dependencyResolver == null) {
                 dependencyResolver = new DependencyResolver(this);
             }
 
-            // 检测循环依赖
-            circularDependencyDetector.beforeCreation(name);
-
-            bean = createBeanWithDependencies(clazz);
-            beans.put(name, bean);
-
-            // 创建完成
-            circularDependencyDetector.afterCreation(name);
-
-            return bean;
+            // 对于单例作用域，直接使用原有逻辑
+            if ("singleton".equals(scopeName)) {
+                circularDependencyDetector.beforeCreation(name);
+                bean = createBeanWithDependencies(clazz);
+                beans.put(name, bean);
+                circularDependencyDetector.afterCreation(name);
+                return bean;
+            } else {
+                // 对于其他作用域，每次创建新实例
+                return scope.get(name, this, () -> createBeanWithDependencies(clazz));
+            }
         } catch (CircularDependencyDetector.CircularDependencyException e) {
             throw e;
         } catch (BeanNotFoundException e) {
-            // 清理创建状态
             circularDependencyDetector.afterCreation(name);
             throw e;
         } catch (Exception e) {
-            // 清理创建状态
             circularDependencyDetector.afterCreation(name);
-            throw new RuntimeException("Failed to create bean: " + name, e);
+            throw new RuntimeException("Failed to get bean: " + name, e);
         }
     }
 
@@ -230,10 +247,17 @@ public class DefaultBeanContainer implements BeanContainer {
      * 销毁所有单例Bean
      */
     public void destroy() {
+        Scope singletonScope = scopeRegistry.getScope("singleton");
+        if (singletonScope instanceof SingletonScope) {
+            ((SingletonScope) singletonScope).destroy();
+        }
+
+        // 调用DisposableBean的destroy方法
         for (Object bean : beans.values()) {
             if (bean instanceof DisposableBean) {
                 ((DisposableBean) bean).destroy();
             }
         }
+        beans.clear();
     }
 }
