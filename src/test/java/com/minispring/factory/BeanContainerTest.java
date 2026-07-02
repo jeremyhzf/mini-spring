@@ -10,15 +10,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class BeanContainerTest {
 
+    /** 测试Bean容器接口 */
     @Test
     void shouldDefineBeanContainerInterface() {
         // 这个测试验证接口可以被正确编译和实例化
         BeanContainer container = new DefaultBeanContainer();
 
         assertNotNull(container);
-        assertTrue(container instanceof BeanContainer);
+        assertInstanceOf(BeanContainer.class, container);
     }
 
+    /** 测试注册和获取Bean */
     @Test
     void shouldRegisterAndGetBean() {
         BeanContainer container = new DefaultBeanContainer();
@@ -30,9 +32,10 @@ public class BeanContainerTest {
         Object bean = container.getBean("testBean");
 
         assertNotNull(bean);
-        assertTrue(bean instanceof SimpleBean);
+        assertInstanceOf(SimpleBean.class, bean);
     }
 
+    /** 测试返回同一个实例 */
     @Test
     void shouldReturnSameInstanceForSameBeanName() {
         BeanContainer container = new DefaultBeanContainer();
@@ -45,6 +48,7 @@ public class BeanContainerTest {
         assertSame(bean1, bean2, "应该返回同一个实例");
     }
 
+    /** 测试Bean不存在时抛出异常 */
     @Test
     void shouldThrowExceptionWhenBeanNotFound() {
         BeanContainer container = new DefaultBeanContainer();
@@ -54,6 +58,7 @@ public class BeanContainerTest {
         });
     }
 
+    /** 测试Bean名称为null时抛出异常 */
     @Test
     void shouldThrowExceptionWhenNameIsNull() {
         BeanContainer container = new DefaultBeanContainer();
@@ -63,6 +68,7 @@ public class BeanContainerTest {
         });
     }
 
+    /** 测试Bean名称为空时抛出异常 */
     @Test
     void shouldThrowExceptionWhenNameIsEmpty() {
         BeanContainer container = new DefaultBeanContainer();
@@ -72,6 +78,7 @@ public class BeanContainerTest {
         });
     }
 
+    /** 测试Bean类为null时抛出异常 */
     @Test
     void shouldThrowExceptionWhenClassIsNull() {
         BeanContainer container = new DefaultBeanContainer();
@@ -81,6 +88,7 @@ public class BeanContainerTest {
         });
     }
 
+    /** 测试没有无参构造器的Bean时抛出异常 */
     @Test
     void shouldThrowExceptionWhenNoNoArgConstructor() {
         BeanContainer container = new DefaultBeanContainer();
@@ -92,6 +100,7 @@ public class BeanContainerTest {
         });
     }
 
+    /** 测试Bean依赖注入 */
     @Test
     void shouldInjectDependenciesViaConstructor() {
         BeanContainer container = new DefaultBeanContainer();
@@ -106,9 +115,10 @@ public class BeanContainerTest {
 
         assertNotNull(service);
         assertNotNull(service.getRepository());
-        assertTrue(service.getRepository() instanceof RepositoryImpl);
+        assertInstanceOf(RepositoryImpl.class, service.getRepository());
     }
 
+    /** 测试依赖未找到时抛出异常 */
     @Test
     void shouldThrowExceptionWhenDependencyNotFound() {
         BeanContainer container = new DefaultBeanContainer();

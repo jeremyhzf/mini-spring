@@ -31,9 +31,13 @@ public class DefaultBeanContainer implements BeanContainer {
      */
     private final Map<String, Class<?>> beanDefinitions = new HashMap<>();
 
+    // 构造器解析器
     private final ConstructorResolver constructorResolver = new ConstructorResolver();
+    // Setter注入器
     private final SetterInjector setterInjector = new SetterInjector();
+    // 依赖解析器
     private DependencyResolver dependencyResolver;
+    // 循环依赖检测器
     private final CircularDependencyDetector circularDependencyDetector = new CircularDependencyDetector();
 
     @Override
