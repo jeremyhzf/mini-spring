@@ -407,8 +407,14 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
         ClassPathBeanScanner scanner = new ClassPathBeanScanner(basePackage);
         Set<Class<?>> components = scanner.scan();
 
+        com.minispring.condition.ConditionEvaluator evaluator =
+                new com.minispring.condition.ConditionEvaluator(getEnvironment());
+
         int count = 0;
         for (Class<?> component : components) {
+            if (!evaluator.shouldRegister(component)) {
+                continue;   // 条件不满足，跳过注册
+            }
             String beanName = scanner.generateBeanName(component);
             registerBean(beanName, component);
             count++;
