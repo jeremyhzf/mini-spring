@@ -11,7 +11,7 @@ public class NotificationService {
         this.repository = repository;
     }
 
-    public void notify(String message) {
+    public void sendNotification(String message) {
         System.out.println("   [构造器注入] NotificationService 处理消息");
         repository.save(message);
     }

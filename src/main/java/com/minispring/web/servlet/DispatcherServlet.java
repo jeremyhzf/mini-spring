@@ -3,7 +3,10 @@ package com.minispring.web.servlet;
 import com.minispring.factory.BeanContainer;
 import com.minispring.factory.DefaultBeanContainer;
 import com.minispring.web.ModelAndView;
+import com.minispring.web.annotation.RequestParam;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -151,10 +154,40 @@ public class DispatcherServlet implements HttpServlet {
         if (handlerObject instanceof RequestMappingHandlerMapping.HandlerMethod) {
             RequestMappingHandlerMapping.HandlerMethod handlerMethod =
                     (RequestMappingHandlerMapping.HandlerMethod) handlerObject;
-            return handlerMethod.invoke();
+            Object[] args = resolveArguments(handlerMethod.getMethod(), request);
+            return handlerMethod.invoke(args);
         }
 
         return handlerObject;
+    }
+
+    /**
+     * 解析方法参数
+     *
+     * @param method  处理器方法
+     * @param request HTTP请求
+     * @return 参数数组
+     */
+    private Object[] resolveArguments(Method method, HttpServletRequest request) {
+        Parameter[] parameters = method.getParameters();
+        Object[] args = new Object[parameters.length];
+
+        for (int i = 0; i < parameters.length; i++) {
+            Parameter parameter = parameters[i];
+            RequestParam requestParam = parameter.getAnnotation(RequestParam.class);
+
+            if (requestParam != null) {
+                String paramName = requestParam.value();
+                if (paramName.isEmpty()) {
+                    paramName = parameter.getName();
+                }
+                args[i] = request.getParameter(paramName);
+            } else {
+                args[i] = null;
+            }
+        }
+
+        return args;
     }
 
     /**

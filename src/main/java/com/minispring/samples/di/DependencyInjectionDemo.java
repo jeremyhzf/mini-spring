@@ -23,7 +23,7 @@ public class DependencyInjectionDemo {
         System.out.println("--- 构造器注入 ---");
         NotificationService notificationService =
                 (NotificationService) container.getBean("notificationService");
-        notificationService.notify("订单已发货");
+        notificationService.sendNotification("订单已发货");
 
         // Setter 注入
         System.out.println("\n--- Setter 注入 ---");
