@@ -74,6 +74,8 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
     // 事件多播器
     private final com.minispring.event.ApplicationEventMulticaster multicaster =
             new com.minispring.event.SimpleApplicationEventMulticaster();
+    // 国际化消息源
+    private com.minispring.i18n.MessageSource messageSource;
 
     /**
      * 默认构造器：自动注册监听器探测器
@@ -516,6 +518,9 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
      * 统一依赖解析：内部类型返回容器自身，其余走依赖解析器
      */
     private Object resolveDependency(Class<?> type) {
+        if (type == com.minispring.i18n.MessageSource.class) {
+            return messageSource;
+        }
         if (isInternalResolvableType(type)) {
             return this;
         }
@@ -530,6 +535,24 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
      */
     public void addAdvisor(Advisor advisor) {
         proxyFactory.addAdvisor(advisor);
+    }
+
+    /**
+     * 设置国际化消息源（@Autowired MessageSource 注入此实例）
+     *
+     * @param messageSource 消息源
+     */
+    public void setMessageSource(com.minispring.i18n.MessageSource messageSource) {
+        this.messageSource = messageSource;
+    }
+
+    /**
+     * 获取国际化消息源
+     *
+     * @return 消息源；未设置时为 null
+     */
+    public com.minispring.i18n.MessageSource getMessageSource() {
+        return messageSource;
     }
 
     /**
