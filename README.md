@@ -22,7 +22,7 @@ Mini-Spring 是一个面向高级开发者的手写 Spring 教学框架。它不
 | 7-2 | 条件装配 | `@Conditional`/`Condition`、`ConditionEvaluator` 元注解解析、内置 `@ConditionalOnProperty` |
 | 7-3 | 国际化 | `MessageSource`、`ResourceBundleMessageSource`/`StaticMessageSource`、`MessageFormat` 参数替换、`@Autowired` 注入 |
 
-> 阶段 7 的事件机制与条件装配已实现；其余高级特性（国际化、异步、事务）见 [路线图](#-路线图)，尚未实现。
+> 阶段 7 的事件机制、条件装配与国际化已实现；其余高级特性（异步、事务）见 [路线图](#-路线图)，尚未实现。
 
 ## 🛠 技术栈
 
