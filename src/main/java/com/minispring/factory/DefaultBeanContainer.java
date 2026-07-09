@@ -37,7 +37,7 @@ import com.minispring.env.StandardEnvironment;
  *
  * 使用Map存储Bean实例，通过反射创建对象
  */
-public class DefaultBeanContainer implements BeanContainer {
+public class DefaultBeanContainer implements BeanContainer, com.minispring.event.ApplicationEventPublisher {
 
     /**
      * 存储Bean实例的Map
@@ -71,6 +71,16 @@ public class DefaultBeanContainer implements BeanContainer {
     private Environment environment;
     // AOP代理工厂
     private final ProxyFactory proxyFactory = new ProxyFactory();
+    // 事件多播器
+    private final com.minispring.event.ApplicationEventMulticaster multicaster =
+            new com.minispring.event.SimpleApplicationEventMulticaster();
+
+    /**
+     * 默认构造器：自动注册监听器探测器
+     */
+    public DefaultBeanContainer() {
+        registerBeanPostProcessor(new com.minispring.event.ApplicationListenerDetector(multicaster));
+    }
 
     @Override
     public void registerBean(String name, Class<?> clazz) {
@@ -204,7 +214,7 @@ public class DefaultBeanContainer implements BeanContainer {
     private Object[] resolveDependencies(Class<?>[] parameterTypes) {
         Object[] args = new Object[parameterTypes.length];
         for (int i = 0; i < parameterTypes.length; i++) {
-            args[i] = dependencyResolver.resolve(parameterTypes[i]);
+            args[i] = resolveDependency(parameterTypes[i]);
         }
         return args;
     }
@@ -222,7 +232,7 @@ public class DefaultBeanContainer implements BeanContainer {
             if (isSetterMethod(method)) {
                 Class<?> paramType = method.getParameterTypes()[0];
                 try {
-                    Object dependency = dependencyResolver.resolve(paramType);
+                    Object dependency = resolveDependency(paramType);
                     method.invoke(bean, dependency);
                 } catch (Exception e) {
                     // Setter注入失败不影响Bean创建
@@ -257,10 +267,7 @@ public class DefaultBeanContainer implements BeanContainer {
                     if (qualifier != null) {
                         dependency = getBean(qualifier);
                     } else {
-                        if (dependencyResolver == null) {
-                            dependencyResolver = new DependencyResolver(this);
-                        }
-                        dependency = dependencyResolver.resolve(field.getType());
+                        dependency = resolveDependency(field.getType());
                     }
 
                     // 设置字段值
@@ -446,10 +453,49 @@ public class DefaultBeanContainer implements BeanContainer {
     }
 
     /**
+     * 判断类型是否为容器内部可解析的依赖（发布器/容器自身）
+     */
+    private boolean isInternalResolvableType(Class<?> type) {
+        return type == com.minispring.event.ApplicationEventPublisher.class
+                || type == BeanContainer.class
+                || type == DefaultBeanContainer.class;
+    }
+
+    /**
+     * 统一依赖解析：内部类型返回容器自身，其余走依赖解析器
+     */
+    private Object resolveDependency(Class<?> type) {
+        if (isInternalResolvableType(type)) {
+            return this;
+        }
+        if (dependencyResolver == null) {
+            dependencyResolver = new DependencyResolver(this);
+        }
+        return dependencyResolver.resolve(type);
+    }
+
+    /**
      * 添加全局Advisor
      */
     public void addAdvisor(Advisor advisor) {
         proxyFactory.addAdvisor(advisor);
+    }
+
+    /**
+     * 发布应用事件（委托给多播器）
+     *
+     * @param event 要发布的事件
+     */
+    @Override
+    public void publishEvent(com.minispring.event.ApplicationEvent event) {
+        multicaster.multicastEvent(event);
+    }
+
+    /**
+     * 暴露多播器，便于配置 Executor / ErrorHandler
+     */
+    public com.minispring.event.ApplicationEventMulticaster getApplicationEventMulticaster() {
+        return multicaster;
     }
 
     /**
