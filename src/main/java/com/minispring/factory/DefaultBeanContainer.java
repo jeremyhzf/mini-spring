@@ -97,6 +97,28 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
     }
 
     /**
+     * 直接注册一个已构造好的实例（不经过创建流程）。
+     * 已注册的监听器实例会在 refresh() 的 getBean 缓存命中后，经探测器注册进多播器。
+     *
+     * @param name    Bean 名称
+     * @param instance Bean 实例
+     */
+    public void registerBeanInstance(String name, Object instance) {
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("Bean name cannot be null or empty");
+        }
+        if (instance == null) {
+            throw new IllegalArgumentException("Bean instance cannot be null");
+        }
+        beans.put(name, instance);
+        beanDefinitions.put(name, instance.getClass());
+        // 按实例注册的监听器也需注册进多播器（绕过创建流程）
+        if (instance instanceof com.minispring.event.ApplicationListener<?> listener) {
+            multicaster.addApplicationListener(listener);
+        }
+    }
+
+    /**
      * 注册Bean后处理器
      *
      * @param postProcessor 后处理器
@@ -328,6 +350,13 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
      * 销毁所有单例Bean
      */
     public void destroy() {
+        // 先广播关闭事件（保证监听器此时仍存活），异常不阻断销毁
+        try {
+            publishEvent(new com.minispring.event.ContextClosedEvent(this));
+        } catch (Exception e) {
+            System.err.println("[事件] 广播 ContextClosedEvent 时出错: " + e.getMessage());
+        }
+
         Scope singletonScope = scopeRegistry.getScope("singleton");
         if (singletonScope instanceof SingletonScope) {
             ((SingletonScope) singletonScope).destroy();
@@ -386,6 +415,22 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
         }
 
         return count;
+    }
+
+    /**
+     * 刷新容器：eager 实例化所有 singleton 单例，然后广播 ContextRefreshedEvent。
+     * 不调用本方法时容器保持懒加载（向后兼容）。
+     */
+    public void refresh() {
+        // 快照 bean 定义，避免创建过程中可能的并发修改
+        java.util.Map<String, Class<?>> snapshot = new java.util.HashMap<>(beanDefinitions);
+        for (String beanName : snapshot.keySet()) {
+            String scopeName = beanScopes.getOrDefault(beanName, "singleton");
+            if ("singleton".equals(scopeName)) {
+                getBean(beanName);
+            }
+        }
+        publishEvent(new com.minispring.event.ContextRefreshedEvent(this));
     }
 
     /**
