@@ -20,6 +20,7 @@ Mini-Spring 是一个面向高级开发者的手写 Spring 教学框架。它不
 | 6 | MVC | `DispatcherServlet` 前端控制器、`HandlerMapping`、`@RequestMapping` 系列注解、`ViewResolver` |
 | 7-1 | 事件机制 | `ApplicationEvent`/`ApplicationListener`、按类型路由的多播器、`@Autowired` 注入发布器、`ContextRefreshed`/`ContextClosed` 生命周期事件 |
 | 7-2 | 条件装配 | `@Conditional`/`Condition`、`ConditionEvaluator` 元注解解析、内置 `@ConditionalOnProperty` |
+| 7-3 | 国际化 | `MessageSource`、`ResourceBundleMessageSource`/`StaticMessageSource`、`MessageFormat` 参数替换、`@Autowired` 注入 |
 
 > 阶段 7 的事件机制与条件装配已实现；其余高级特性（国际化、异步、事务）见 [路线图](#-路线图)，尚未实现。
 
@@ -69,6 +70,9 @@ mini-spring/
 │   │   ├── Conditional / Condition / ConditionContext
 │   │   ├── ConditionEvaluator（元注解解析 + 求值）
 │   │   └── ConditionalOnProperty / OnPropertyCondition
+│   ├── i18n/                     # 国际化（阶段 7-3）
+│   │   ├── MessageSource / NoSuchMessageException / AbstractMessageSource
+│   │   └── StaticMessageSource / ResourceBundleMessageSource
 │   └── samples/                  # 各阶段示例（按阶段分包，每个含一个 *Demo 入口）
 │       ├── ioc/                          # 阶段1 BeanContainerDemo
 │       ├── di/                           # 阶段2 DependencyInjectionDemo
@@ -77,7 +81,8 @@ mini-spring/
 │       ├── aop/                          # 阶段5 AopDemo（OrderService / IOrderService）
 │       ├── mvc/                          # 阶段6 MvcDemo（UserController）
 │       ├── event/                        # 阶段7-1 EventDemo（UserService / 事件 / 监听器）
-│       └── conditional/                  # 阶段7-2 ConditionalDemo（BasicService / PremiumService）
+│       ├── conditional/                  # 阶段7-2 ConditionalDemo（BasicService / PremiumService）
+│       └── messagesource/                # 阶段7-3 MessageSourceDemo（GreetingService）
 ├── src/test/java/com/minispring/         # 各阶段单元测试 + 集成测试
 └── docs/
     ├── plans/                            # 各阶段实施计划
@@ -129,6 +134,9 @@ mvn compile exec:java -Dexec.mainClass="com.minispring.samples.event.EventDemo"
 
 # 阶段7-2 条件装配
 mvn compile exec:java -Dexec.mainClass="com.minispring.samples.conditional.ConditionalDemo"
+
+# 阶段7-3 国际化
+mvn compile exec:java -Dexec.mainClass="com.minispring.samples.messagesource.MessageSourceDemo"
 ```
 
 ## 📖 核心用法
@@ -257,7 +265,8 @@ mvn test        # 运行全部测试
 | 6 | MVC 框架 | ✅ 已完成 |
 | 7-1 | 事件机制（ApplicationEvent / Listener / 生命周期事件） | ✅ 已完成 |
 | 7-2 | 条件装配（@Conditional / @ConditionalOnProperty） | ✅ 已完成 |
-| 7 | 高级特性其余部分（国际化、异步、事务） | ⏳ 计划中 |
+| 7-3 | 国际化（MessageSource / 多 locale / 参数替换） | ✅ 已完成 |
+| 7 | 异步 `@Async` → 事务 `@Transactional` | ⏳ 计划中（按此顺序逐个推进） |
 
 ## 🎯 学习目标
 
