@@ -1,5 +1,6 @@
 package com.minispring.web.samples;
 
+import com.minispring.samples.mvc.UserController;
 import com.minispring.web.servlet.DispatcherServlet;
 import com.minispring.web.servlet.MockHttpServletRequest;
 import com.minispring.web.servlet.MockHttpServletResponse;

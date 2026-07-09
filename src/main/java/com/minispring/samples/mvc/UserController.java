@@ -1,4 +1,4 @@
-package com.minispring.web.samples;
+package com.minispring.samples.mvc;
 
 import com.minispring.web.ModelAndView;
 import com.minispring.web.annotation.GetMapping;
