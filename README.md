@@ -8,7 +8,7 @@ Mini-Spring 是一个面向高级开发者的手写 Spring 教学框架。它不
 
 ## ✨ 特性概览
 
-按六个阶段循序渐进，每阶段都是一个可独立运行、带完整单元测试的最小实现：
+按阶段循序渐进（阶段 1-6 为核心阶段，阶段 7 为高级特性），每阶段都是一个可独立运行、带完整单元测试的最小实现：
 
 | 阶段 | 主题 | 核心能力 |
 |------|------|---------|
@@ -18,6 +18,7 @@ Mini-Spring 是一个面向高级开发者的手写 Spring 教学框架。它不
 | 4 | 注解驱动 | `@Component`/`@Service`/`@Repository`/`@Controller`、`@Autowired`/`@Qualifier`/`@Value`、组件扫描 |
 | 5 | AOP | JDK 动态代理、CGLIB 代理、Advice 体系、Advisor/Pointcut、责任链拦截器 |
 | 6 | MVC | `DispatcherServlet` 前端控制器、`HandlerMapping`、`@RequestMapping` 系列注解、`ViewResolver` |
+| 7-1 | 事件机制 | `ApplicationEvent`/`ApplicationListener`、按类型路由的多播器、`@Autowired` 注入发布器、`ContextRefreshed`/`ContextClosed` 生命周期事件 |
 
 > 阶段 7 的事件机制已实现；其余高级特性（条件装配、国际化、异步、事务）见 [路线图](#-路线图)，尚未实现。
 
@@ -179,17 +180,61 @@ DispatcherServlet servlet = new DispatcherServlet();
 servlet.registerController(new UserController());
 ```
 
+### 事件机制：发布-订阅（阶段 7-1）
+
+自定义事件、按类型路由的监听器、依赖注入的发布器：
+
+```java
+// 自定义事件
+public class UserCreatedEvent extends ApplicationEvent {
+    private final String name;
+    public UserCreatedEvent(Object source, String name) { super(source); this.name = name; }
+    public String getName() { return name; }
+}
+
+// 监听器：实现 ApplicationListener<E>，只接收类型匹配的事件
+@Component
+public class UserCreatedListener implements ApplicationListener<UserCreatedEvent> {
+    @Override
+    public void onApplicationEvent(UserCreatedEvent event) {
+        System.out.println("收到用户创建事件: " + event.getName());
+    }
+}
+
+// 发布方：注入发布器并发布
+@Service
+public class UserService {
+    @Autowired
+    private ApplicationEventPublisher publisher;
+
+    public void register(String name) {
+        publisher.publishEvent(new UserCreatedEvent(this, name));
+    }
+}
+```
+
+```java
+DefaultBeanContainer container = new DefaultBeanContainer();
+container.scanComponents("com.minispring.samples.event");
+container.refresh();   // eager 实例化单例，广播 ContextRefreshedEvent
+
+UserService service = (UserService) container.getBean("userService");
+service.register("Alice");   // 监听器收到 UserCreatedEvent
+
+container.destroy();   // 广播 ContextClosedEvent（先于单例销毁）
+```
+
 > 各阶段的设计原理、教学重点与代码注释详见 [`docs/`](docs/) 下的实施计划与完成检查清单。
 
 ## 🧪 测试
 
-测试代码与各阶段一一对应，覆盖从 Bean 容器基础到 AOP/MVC 的全部功能与边界场景：
+测试代码与各阶段一一对应，覆盖从 Bean 容器基础到 AOP/MVC/事件机制的全部功能与边界场景：
 
 ```bash
 mvn test        # 运行全部测试
 ```
 
-关键测试类包括 `BeanContainerTest`、`DependencyResolverTest`、`LifecycleTest`、`AnnotationDrivenTest`、`ProxyFactoryTest`、`DispatcherServletTest` 等。
+关键测试类包括 `BeanContainerTest`、`DependencyResolverTest`、`LifecycleTest`、`AnnotationDrivenTest`、`ProxyFactoryTest`、`DispatcherServletTest`、`SimpleApplicationEventMulticasterTest`、`GenericTypeResolverTest`、`EventContainerPublishTest`、`EventContainerLifecycleTest` 等。
 
 ## 🗺 路线图
 
@@ -213,6 +258,7 @@ mvn test        # 运行全部测试
 - 看透注解驱动编程模型背后的类加载与元数据处理
 - 理解 JDK 动态代理与 CGLIB 代理在 AOP 中的应用
 - 重建 Servlet 基础上的前端控制器 MVC 架构
+- 理解发布-订阅事件机制与容器生命周期事件的设计
 - 进而更自如地阅读 Spring 源码，并在工程中更好地使用与扩展 Spring
 
 ## 📄 许可
