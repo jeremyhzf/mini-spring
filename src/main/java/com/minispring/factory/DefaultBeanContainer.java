@@ -1,5 +1,7 @@
 package com.minispring.factory;
 
+import com.minispring.condition.ConditionEvaluator;
+import com.minispring.event.*;
 import com.minispring.factory.dependency.CircularDependencyDetector;
 import com.minispring.factory.dependency.DependencyResolver;
 import com.minispring.factory.instantiator.ConstructorResolver;
@@ -25,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.minispring.i18n.MessageSource;
 import com.minispring.scanner.ClassPathBeanScanner;
 import com.minispring.annotation.Autowired;
 import com.minispring.annotation.Qualifier;
@@ -34,22 +37,19 @@ import com.minispring.env.StandardEnvironment;
 
 /**
  * 默认的Bean容器实现
- *
  * 使用Map存储Bean实例，通过反射创建对象
  */
-public class DefaultBeanContainer implements BeanContainer, com.minispring.event.ApplicationEventPublisher {
+public class DefaultBeanContainer implements BeanContainer, ApplicationEventPublisher {
 
     /**
      * 存储Bean实例的Map
-     * Key: Bean名称
-     * Value: Bean实例
+     * Key: Bean名称  ->  Value: Bean实例
      */
     private final Map<String, Object> beans = new HashMap<>();
 
     /**
      * 存储Bean定义的Map
-     * Key: Bean名称
-     * Value: Bean类型
+     * Key: Bean名称  ->  Value: Bean类型
      */
     private final Map<String, Class<?>> beanDefinitions = new HashMap<>();
 
@@ -61,27 +61,26 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
     private DependencyResolver dependencyResolver;
     // 循环依赖检测器
     private final CircularDependencyDetector circularDependencyDetector = new CircularDependencyDetector();
-    // Bean后处理器列表
+    // Bean后处理器列表 (允许在Bean初始化前后对Bean进行自定义处理)
     private final List<BeanPostProcessor> postProcessors = new ArrayList<>();
     // 作用域注册表
     private final ScopeRegistry scopeRegistry = new ScopeRegistry();
-    // Bean作用域映射
+    // Bean作用域映射 (beanName -> scopeName)
     private final Map<String, String> beanScopes = new HashMap<>();
-    // 环境
+    // 环境抽象
     private Environment environment;
     // AOP代理工厂
     private final ProxyFactory proxyFactory = new ProxyFactory();
     // 事件多播器
-    private final com.minispring.event.ApplicationEventMulticaster multicaster =
-            new com.minispring.event.SimpleApplicationEventMulticaster();
+    private final ApplicationEventMulticaster multicaster = new SimpleApplicationEventMulticaster();
     // 国际化消息源
-    private com.minispring.i18n.MessageSource messageSource;
+    private MessageSource messageSource;
 
     /**
      * 默认构造器：自动注册监听器探测器
      */
     public DefaultBeanContainer() {
-        registerBeanPostProcessor(new com.minispring.event.ApplicationListenerDetector(multicaster));
+        registerBeanPostProcessor(new ApplicationListenerDetector(multicaster));
     }
 
     @Override
@@ -115,7 +114,7 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
         beans.put(name, instance);
         beanDefinitions.put(name, instance.getClass());
         // 按实例注册的监听器也需注册进多播器（绕过创建流程）
-        if (instance instanceof com.minispring.event.ApplicationListener<?> listener) {
+        if (instance instanceof ApplicationListener<?> listener) {
             multicaster.addApplicationListener(listener);
         }
     }
@@ -166,6 +165,7 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
             // 对于单例作用域，直接使用原有逻辑
             if ("singleton".equals(scopeName)) {
                 circularDependencyDetector.beforeCreation(name);
+                // 创建Bean实例并 注入依赖
                 bean = createBeanWithDependencies(clazz);
                 beans.put(name, bean);
                 circularDependencyDetector.afterCreation(name);
@@ -354,7 +354,7 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
     public void destroy() {
         // 先广播关闭事件（保证监听器此时仍存活），异常不阻断销毁
         try {
-            publishEvent(new com.minispring.event.ContextClosedEvent(this));
+            publishEvent(new ContextClosedEvent(this));
         } catch (Exception e) {
             System.err.println("[事件] 广播 ContextClosedEvent 时出错: " + e.getMessage());
         }
@@ -409,8 +409,7 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
         ClassPathBeanScanner scanner = new ClassPathBeanScanner(basePackage);
         Set<Class<?>> components = scanner.scan();
 
-        com.minispring.condition.ConditionEvaluator evaluator =
-                new com.minispring.condition.ConditionEvaluator(getEnvironment());
+        ConditionEvaluator evaluator = new ConditionEvaluator(getEnvironment());
 
         int count = 0;
         for (Class<?> component : components) {
@@ -431,14 +430,14 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
      */
     public void refresh() {
         // 快照 bean 定义，避免创建过程中可能的并发修改
-        java.util.Map<String, Class<?>> snapshot = new java.util.HashMap<>(beanDefinitions);
+        Map<String, Class<?>> snapshot = new HashMap<>(beanDefinitions);
         for (String beanName : snapshot.keySet()) {
             String scopeName = beanScopes.getOrDefault(beanName, "singleton");
             if ("singleton".equals(scopeName)) {
                 getBean(beanName);
             }
         }
-        publishEvent(new com.minispring.event.ContextRefreshedEvent(this));
+        publishEvent(new ContextRefreshedEvent(this));
     }
 
     /**
@@ -509,7 +508,7 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
      * 判断类型是否为容器内部可解析的依赖（发布器/容器自身）
      */
     private boolean isInternalResolvableType(Class<?> type) {
-        return type == com.minispring.event.ApplicationEventPublisher.class
+        return type == ApplicationEventPublisher.class
                 || type == BeanContainer.class
                 || type == DefaultBeanContainer.class;
     }
@@ -518,7 +517,7 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
      * 统一依赖解析：内部类型返回容器自身，其余走依赖解析器
      */
     private Object resolveDependency(Class<?> type) {
-        if (type == com.minispring.i18n.MessageSource.class) {
+        if (type == MessageSource.class) {
             return messageSource;
         }
         if (isInternalResolvableType(type)) {
@@ -542,7 +541,7 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
      *
      * @param messageSource 消息源
      */
-    public void setMessageSource(com.minispring.i18n.MessageSource messageSource) {
+    public void setMessageSource(MessageSource messageSource) {
         this.messageSource = messageSource;
     }
 
@@ -551,7 +550,7 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
      *
      * @return 消息源；未设置时为 null
      */
-    public com.minispring.i18n.MessageSource getMessageSource() {
+    public MessageSource getMessageSource() {
         return messageSource;
     }
 
@@ -561,21 +560,21 @@ public class DefaultBeanContainer implements BeanContainer, com.minispring.event
      * @param event 要发布的事件
      */
     @Override
-    public void publishEvent(com.minispring.event.ApplicationEvent event) {
+    public void publishEvent(ApplicationEvent event) {
         multicaster.multicastEvent(event);
     }
 
     /**
      * 暴露多播器，便于配置 Executor / ErrorHandler
      */
-    public com.minispring.event.ApplicationEventMulticaster getApplicationEventMulticaster() {
+    public ApplicationEventMulticaster getApplicationEventMulticaster() {
         return multicaster;
     }
 
     /**
      * 应用AOP代理
      */
-    private Object applyAopProxy(Object bean, Class<?> clazz) throws Exception {
+    private Object applyAopProxy(Object bean, Class<?> clazz) {
         // 检查是否有Advisor需要应用到这个Bean
         // 简化实现：如果有Advisor就创建代理
         if (proxyFactory.hasAdvisors()) {

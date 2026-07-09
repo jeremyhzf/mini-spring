@@ -13,7 +13,12 @@ import java.util.Map;
  */
 public class RequestMappingHandlerMapping implements HandlerMapping {
 
-    private Map<String, HandlerMethod> handlerMethods = new HashMap<>();
+    /**
+     * 处理器方法映射
+     * key: 请求路径(method + ":" + uri;) , 如 GET:/users
+     * value: HandlerMethod(Controller, method)
+     */
+    private final Map<String, HandlerMethod> handlerMethods = new HashMap<>();
 
     /**
      * 注册处理器
@@ -83,6 +88,7 @@ public class RequestMappingHandlerMapping implements HandlerMapping {
      * 处理器方法封装
      */
     public static class HandlerMethod {
+        // 处理器对象, 一般是控制器(Controller)
         private final Object handler;
         private final Method method;
 

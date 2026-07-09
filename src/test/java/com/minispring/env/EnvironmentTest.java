@@ -19,7 +19,6 @@ public class EnvironmentTest {
     @Test
     void shouldSupportDefaultValue() {
         Environment env = new StandardEnvironment();
-
         assertEquals("default", env.resolvePlaceholders("${missing.property:default}"));
     }
 }

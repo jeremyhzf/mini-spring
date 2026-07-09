@@ -2,6 +2,7 @@ package com.minispring.samples.async;
 
 import com.minispring.aop.DefaultAdvisor;
 import com.minispring.aop.MethodMatcher;
+import com.minispring.async.Async;
 import com.minispring.async.AsyncInterceptor;
 import com.minispring.factory.DefaultBeanContainer;
 
@@ -21,7 +22,7 @@ public class AsyncDemo {
         // 接入 @Async：AsyncInterceptor + 匹配 @Async 方法的 MethodMatcher
         container.addAdvisor(new DefaultAdvisor(
                 new AsyncInterceptor(),
-                (MethodMatcher) (method, targetClass) -> method.isAnnotationPresent(com.minispring.async.Async.class)
+                (MethodMatcher) (method, targetClass) -> method.isAnnotationPresent(Async.class)
         ));
         container.registerBean("notificationService", NotificationServiceImpl.class);
 
@@ -34,6 +35,7 @@ public class AsyncDemo {
         System.out.println("\n--- 调用 prepare（CompletableFuture，等待结果）---");
         CompletableFuture<String> future = service.prepare("world");
         System.out.println("[main] prepare 已返回 future，等待结果...");
+        System.out.println("[main] 主线程继续执行其他业务，不阻塞！");
         String result = future.get();
         System.out.println("[main] prepare 结果: " + result);
 

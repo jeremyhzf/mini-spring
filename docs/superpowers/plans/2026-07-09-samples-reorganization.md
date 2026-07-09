@@ -754,8 +754,6 @@ public class UserController {
 package com.minispring.samples.mvc;
 
 import com.minispring.web.servlet.DispatcherServlet;
-import com.minispring.web.servlet.MockHttpServletRequest;
-import com.minispring.web.servlet.MockHttpServletResponse;
 
 /**
  * 阶段6 - MVC 前端控制器示例
@@ -813,9 +811,6 @@ public class MvcDemo {
 ```java
 package com.minispring.web.samples;
 
-import com.minispring.web.servlet.DispatcherServlet;
-import com.minispring.web.servlet.MockHttpServletRequest;
-import com.minispring.web.servlet.MockHttpServletResponse;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -826,10 +821,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 ```java
 package com.minispring.web.samples;
 
-import com.minispring.samples.mvc.UserController;
-import com.minispring.web.servlet.DispatcherServlet;
-import com.minispring.web.servlet.MockHttpServletRequest;
-import com.minispring.web.servlet.MockHttpServletResponse;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;

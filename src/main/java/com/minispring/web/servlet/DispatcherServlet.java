@@ -151,9 +151,7 @@ public class DispatcherServlet implements HttpServlet {
     private Object executeHandler(HandlerExecutionChain handler, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Object handlerObject = handler.getHandler();
 
-        if (handlerObject instanceof RequestMappingHandlerMapping.HandlerMethod) {
-            RequestMappingHandlerMapping.HandlerMethod handlerMethod =
-                    (RequestMappingHandlerMapping.HandlerMethod) handlerObject;
+        if (handlerObject instanceof RequestMappingHandlerMapping.HandlerMethod handlerMethod) {
             Object[] args = resolveArguments(handlerMethod.getMethod(), request);
             return handlerMethod.invoke(args);
         }
@@ -195,7 +193,7 @@ public class DispatcherServlet implements HttpServlet {
      *
      * @param result   处理结果
      * @param response HTTP响应
-     * @throwsException 处理结果过程中发生的异常
+     * {@code @throwsException} 处理结果过程中发生的异常
      */
     private void handleResult(Object result, HttpServletResponse response) throws Exception {
         if (result == null) {

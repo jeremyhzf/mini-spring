@@ -8,6 +8,7 @@ import java.util.Locale;
 /**
  * 阶段7-3 - 国际化示例
  * 演示：ResourceBundleMessageSource 读 .properties、多 locale、{0} 参数、@Autowired 注入
+ * i18n 文件存放位置：src/main/resources/messages.properties
  */
 public class MessageSourceDemo {
 
@@ -23,8 +24,9 @@ public class MessageSourceDemo {
 
         GreetingService service = (GreetingService) container.getBean("greetingService");
 
-        System.out.println("English : " + service.greet("Alice", Locale.ENGLISH));
+        System.out.println("English  : " + service.greet("Alice", Locale.ENGLISH));
         System.out.println("中文     : " + service.greet("Alice", Locale.CHINESE));
+        System.out.println("Japanese : " + service.greet("Alice", Locale.JAPANESE));
 
         System.out.println("\n=== 阶段7-3 示例结束 ===");
     }

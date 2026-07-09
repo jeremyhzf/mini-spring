@@ -23,7 +23,7 @@ public class ConditionEvaluator {
     }
 
     /**
-     * 候选类是否应当注册
+     * 判断候选类是否应当注册
      */
     public boolean shouldRegister(Class<?> candidate) {
         Set<Class<? extends Condition>> conditionTypes = findConditions(candidate);

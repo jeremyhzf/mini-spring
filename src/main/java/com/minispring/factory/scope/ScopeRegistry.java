@@ -8,7 +8,7 @@ import java.util.Map;
  * 管理所有作用域实例
  */
 public class ScopeRegistry {
-
+    // scopeName -> Scope
     private final Map<String, Scope> scopes = new HashMap<>();
 
     public ScopeRegistry() {

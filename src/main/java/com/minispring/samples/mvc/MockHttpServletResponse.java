@@ -1,4 +1,6 @@
-package com.minispring.web.servlet;
+package com.minispring.samples.mvc;
+
+import com.minispring.web.servlet.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.PrintWriter;

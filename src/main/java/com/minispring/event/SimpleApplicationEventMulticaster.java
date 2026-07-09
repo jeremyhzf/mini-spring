@@ -65,10 +65,8 @@ public class SimpleApplicationEventMulticaster implements ApplicationEventMultic
                 errorHandler.handleError(t);
             } else if (t instanceof RuntimeException runtimeException) {
                 throw runtimeException;
-            } else if (t instanceof Error error) {
-                throw error;
             } else {
-                throw new RuntimeException(t);
+                throw (Error) t;
             }
         }
     }

@@ -16,11 +16,11 @@ public class AbstractMessageSourceTest {
         return new AbstractMessageSource() {
             @Override
             protected String resolveCode(String code, Locale locale) {
-                switch (code) {
-                    case "greeting": return "Hello,{0}";
-                    case "plain": return "Hi";
-                    default: return null;
-                }
+                return switch (code) {
+                    case "greeting" -> "Hello,{0}";
+                    case "plain" -> "Hi";
+                    default -> null;
+                };
             }
         };
     }

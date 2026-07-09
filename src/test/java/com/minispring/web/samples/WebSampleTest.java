@@ -2,8 +2,8 @@ package com.minispring.web.samples;
 
 import com.minispring.samples.mvc.UserController;
 import com.minispring.web.servlet.DispatcherServlet;
-import com.minispring.web.servlet.MockHttpServletRequest;
-import com.minispring.web.servlet.MockHttpServletResponse;
+import com.minispring.samples.mvc.MockHttpServletRequest;
+import com.minispring.samples.mvc.MockHttpServletResponse;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;

@@ -15,6 +15,7 @@ import java.util.Map;
 @RequestMapping("/user")
 public class UserController {
 
+    // 模拟数据库（id -> name）
     private final Map<String, String> users = new HashMap<>();
 
     /**

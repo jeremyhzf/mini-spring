@@ -20,17 +20,14 @@ public class AopDemo {
         // 事务拦截器：只应用于 create 开头的方法
         container.addAdvisor(new DefaultAdvisor(
                 new TransactionInterceptor(),
-                new MethodMatcher() {
-                    @Override
-                    public boolean matches(java.lang.reflect.Method method, Class<?> targetClass) {
-                        return method.getName().startsWith("create");
-                    }
-                }
+                // 方法匹配器, 匹配 create 开头的方法
+                (MethodMatcher) (method, targetClass) -> method.getName().startsWith("create")
         ));
 
         // 日志拦截器：应用于所有方法
         container.addAdvisor(new DefaultAdvisor(
                 new LoggingInterceptor(),
+                // 方法匹配器, 匹配所有方法
                 (MethodMatcher) (method, targetClass) -> true
         ));
 

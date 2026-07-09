@@ -7,6 +7,7 @@ import com.minispring.aop.advice.Advice;
  */
 public class DefaultAdvisor implements Advisor {
 
+    // Advice（通知） 和 Pointcut（切入点）
     private final Advice advice;
     private final Pointcut pointcut;
 

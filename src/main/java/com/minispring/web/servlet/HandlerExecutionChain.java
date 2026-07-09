@@ -8,8 +8,8 @@ import java.util.List;
  */
 public class HandlerExecutionChain {
 
-    private Object handler;
-    private List<HandlerInterceptor> interceptors = new ArrayList<>();
+    private final Object handler;
+    private final List<HandlerInterceptor> interceptors = new ArrayList<>();
 
     public HandlerExecutionChain(Object handler) {
         this.handler = handler;

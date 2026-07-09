@@ -1,9 +1,7 @@
-package com.minispring.web.servlet;
+package com.minispring.samples.mvc;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Collections;
+import com.minispring.web.servlet.HttpServletRequest;
+
 import java.util.HashMap;
 import java.util.Map;
 

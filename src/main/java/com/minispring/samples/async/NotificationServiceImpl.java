@@ -1,5 +1,7 @@
 package com.minispring.samples.async;
 
+import com.minispring.async.Async;
+
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -7,11 +9,15 @@ import java.util.concurrent.CompletableFuture;
  */
 public class NotificationServiceImpl implements NotificationService {
 
+    // 无返回值的异步方法
+    //@Async
     @Override
     public void notify(String message) {
         System.out.println("[线程 " + Thread.currentThread().getName() + "] 发送通知: " + message);
     }
 
+    // 有返回值的异步方法（使用 CompletableFuture）
+    //@Async
     @Override
     public CompletableFuture<String> prepare(String message) {
         System.out.println("[线程 " + Thread.currentThread().getName() + "] 准备通知: " + message);

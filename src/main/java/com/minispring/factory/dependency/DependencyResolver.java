@@ -2,6 +2,9 @@ package com.minispring.factory.dependency;
 
 import com.minispring.factory.BeanContainer;
 import com.minispring.factory.BeanNotFoundException;
+import com.minispring.factory.DefaultBeanContainer;
+
+import java.util.Map;
 
 /**
  * 依赖解析器
@@ -36,9 +39,7 @@ public class DependencyResolver {
      */
     private Object resolveByType(Class<?> type) {
         // 如果容器是DefaultBeanContainer，可以获取Bean定义信息
-        if (container instanceof com.minispring.factory.DefaultBeanContainer) {
-            com.minispring.factory.DefaultBeanContainer defaultContainer =
-                (com.minispring.factory.DefaultBeanContainer) container;
+        if (container instanceof DefaultBeanContainer defaultContainer) {
 
             // 尝试按类型名称查找
             String beanName = generateBeanName(type);
@@ -46,8 +47,8 @@ public class DependencyResolver {
                 return container.getBean(beanName);
             } catch (BeanNotFoundException e) {
                 // 如果按名称找不到，尝试按类型查找所有Bean定义
-                java.util.Map<String, Class<?>> beanDefinitions = defaultContainer.getBeanDefinitions();
-                for (java.util.Map.Entry<String, Class<?>> entry : beanDefinitions.entrySet()) {
+                Map<String, Class<?>> beanDefinitions = defaultContainer.getBeanDefinitions();
+                for (Map.Entry<String, Class<?>> entry : beanDefinitions.entrySet()) {
                     if (type.isAssignableFrom(entry.getValue())) {
                         return container.getBean(entry.getKey());
                     }

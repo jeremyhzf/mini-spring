@@ -31,7 +31,7 @@ public class ClassPathScanner {
 
             while (resources.hasMoreElements()) {
                 URL url = resources.nextElement();
-                if (url.getProtocol().equals("file")) {
+                if ("file".equals(url.getProtocol())) {
                     findClasses(new File(url.getFile()), basePackage, classes);
                 }
             }

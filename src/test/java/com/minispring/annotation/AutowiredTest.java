@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class AutowiredTest {
 
+    // 测试Autowired注解
     @Test
     void shouldDefineAutowiredAnnotation() {
         assertNotNull(TestService.class.getDeclaredFields()[0].getAnnotation(Autowired.class));
