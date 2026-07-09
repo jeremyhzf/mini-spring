@@ -23,7 +23,7 @@ Mini-Spring 是一个面向高级开发者的手写 Spring 教学框架。它不
 | 7-3 | 国际化 | `MessageSource`、`ResourceBundleMessageSource`/`StaticMessageSource`、`MessageFormat` 参数替换、`@Autowired` 注入 |
 | 7-4 | 异步 | `@Async`（接口方法）、`AsyncInterceptor`（`AroundAdvice`）、`Executor` 异步执行、`void`/`CompletableFuture` 返回 |
 
-> 阶段 7 的事件机制、条件装配与国际化已实现；其余高级特性（异步、事务）见 [路线图](#-路线图)，尚未实现。
+> 阶段 7 的事件机制、条件装配、国际化与异步已实现；其余高级特性（事务）见 [路线图](#-路线图)，尚未实现。
 
 ## 🛠 技术栈
 
