@@ -19,7 +19,7 @@ Mini-Spring 是一个面向高级开发者的手写 Spring 教学框架。它不
 | 5 | AOP | JDK 动态代理、CGLIB 代理、Advice 体系、Advisor/Pointcut、责任链拦截器 |
 | 6 | MVC | `DispatcherServlet` 前端控制器、`HandlerMapping`、`@RequestMapping` 系列注解、`ViewResolver` |
 
-> 阶段 7（事务、异步、事件、国际化等高级特性）见 [路线图](#-路线图)，尚未实现。
+> 阶段 7 的事件机制已实现；其余高级特性（条件装配、国际化、异步、事务）见 [路线图](#-路线图)，尚未实现。
 
 ## 🛠 技术栈
 
@@ -58,13 +58,19 @@ mini-spring/
 │   │   ├── annotation/                   # @RequestMapping / @GetMapping / @PostMapping / @RequestParam
 │   │   ├── servlet/                      # DispatcherServlet / HandlerMapping / HandlerExecutionChain / HandlerInterceptor
 │   │   └── view/                         # View / ViewResolver / InternalResourceView / InternalResourceViewResolver
+│   ├── event/                    # 事件机制（阶段 7-1）
+│   │   ├── ApplicationEvent / ApplicationListener / ApplicationEventPublisher
+│   │   ├── ApplicationEventMulticaster / SimpleApplicationEventMulticaster / ErrorHandler
+│   │   ├── GenericTypeResolver / ApplicationListenerDetector
+│   │   └── ContextRefreshedEvent / ContextClosedEvent
 │   └── samples/                  # 各阶段示例（按阶段分包，每个含一个 *Demo 入口）
 │       ├── ioc/                          # 阶段1 BeanContainerDemo
 │       ├── di/                           # 阶段2 DependencyInjectionDemo
 │       ├── lifecycle/                    # 阶段3 LifecycleDemo
 │       ├── annotation/                   # 阶段4 AnnotationDemo（UserService / UserRepository）
 │       ├── aop/                          # 阶段5 AopDemo（OrderService / IOrderService）
-│       └── mvc/                          # 阶段6 MvcDemo（UserController）
+│       ├── mvc/                          # 阶段6 MvcDemo（UserController）
+│       └── event/                        # 阶段7-1 EventDemo（UserService / 事件 / 监听器）
 ├── src/test/java/com/minispring/         # 各阶段单元测试 + 集成测试
 └── docs/
     ├── plans/                            # 各阶段实施计划
@@ -110,6 +116,9 @@ mvn compile exec:java -Dexec.mainClass="com.minispring.samples.aop.AopDemo"
 
 # 阶段6 MVC
 mvn compile exec:java -Dexec.mainClass="com.minispring.samples.mvc.MvcDemo"
+
+# 阶段7-1 事件机制
+mvn compile exec:java -Dexec.mainClass="com.minispring.samples.event.EventDemo"
 ```
 
 ## 📖 核心用法
@@ -192,7 +201,8 @@ mvn test        # 运行全部测试
 | 4 | 注解驱动开发 | ✅ 已完成 |
 | 5 | AOP 实现 | ✅ 已完成 |
 | 6 | MVC 框架 | ✅ 已完成 |
-| 7 | 高级特性（事务、异步、事件、国际化） | ⏳ 计划中 |
+| 7-1 | 事件机制（ApplicationEvent / Listener / 生命周期事件） | ✅ 已完成 |
+| 7 | 高级特性其余部分（条件装配、国际化、异步、事务） | ⏳ 计划中 |
 
 ## 🎯 学习目标
 
