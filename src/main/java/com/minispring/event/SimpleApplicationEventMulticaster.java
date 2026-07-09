@@ -17,8 +17,8 @@ public class SimpleApplicationEventMulticaster implements ApplicationEventMultic
     private final Set<ApplicationListener<?>> listeners = new CopyOnWriteArraySet<>();
     private final Map<ApplicationListener<?>, Class<?>> eventTypeCache = new ConcurrentHashMap<>();
 
-    private Executor executor;
-    private ErrorHandler errorHandler;
+    private volatile Executor executor;
+    private volatile ErrorHandler errorHandler;
 
     @Override
     public void addApplicationListener(ApplicationListener<?> listener) {
@@ -30,6 +30,7 @@ public class SimpleApplicationEventMulticaster implements ApplicationEventMultic
     @Override
     public void removeApplicationListener(ApplicationListener<?> listener) {
         listeners.remove(listener);
+        eventTypeCache.remove(listener);
     }
 
     @Override
