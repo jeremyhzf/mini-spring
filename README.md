@@ -21,7 +21,7 @@ Mini-Spring 是一个面向高级开发者的手写 Spring 教学框架。它不
 | 7-1 | 事件机制 | `ApplicationEvent`/`ApplicationListener`、按类型路由的多播器、`@Autowired` 注入发布器、`ContextRefreshed`/`ContextClosed` 生命周期事件 |
 | 7-2 | 条件装配 | `@Conditional`/`Condition`、`ConditionEvaluator` 元注解解析、内置 `@ConditionalOnProperty` |
 
-> 阶段 7 的事件机制已实现；其余高级特性（条件装配、国际化、异步、事务）见 [路线图](#-路线图)，尚未实现。
+> 阶段 7 的事件机制与条件装配已实现；其余高级特性（国际化、异步、事务）见 [路线图](#-路线图)，尚未实现。
 
 ## 🛠 技术栈
 
