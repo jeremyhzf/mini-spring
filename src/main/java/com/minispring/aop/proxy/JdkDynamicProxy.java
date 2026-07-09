@@ -54,7 +54,11 @@ public class JdkDynamicProxy implements InvocationHandler {
 
             @Override
             public Object proceed() throws Throwable {
-                return method.invoke(target, args);
+                try {
+                    return method.invoke(target, args);
+                } catch (java.lang.reflect.InvocationTargetException e) {
+                    throw e.getCause();
+                }
             }
         };
 
