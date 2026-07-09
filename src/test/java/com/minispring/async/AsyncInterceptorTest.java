@@ -38,6 +38,11 @@ public class AsyncInterceptorTest {
         }
 
         @Async
+        public CompletableFuture<String> doFutureInnerFail() {
+            return CompletableFuture.failedFuture(new RuntimeException("inner-boom"));
+        }
+
+        @Async
         public String doBad() {
             return "x";
         }
@@ -113,6 +118,23 @@ public class AsyncInterceptorTest {
         assertTrue(future.isCompletedExceptionally());
         ExecutionException ex = assertThrows(ExecutionException.class, future::get);
         assertEquals("boom", ex.getCause().getMessage());
+    }
+
+    @Test
+    void completableFutureAsyncShouldPropagateInnerFutureFailure() throws Throwable {
+        // 目标方法返回一个已失败的 CompletableFuture，验证 whenComplete 的 error 分支
+        List<Runnable> captured = new ArrayList<>();
+        AsyncInterceptor interceptor = new AsyncInterceptor(captured::add);
+        Fixture fixture = new Fixture();
+
+        @SuppressWarnings("unchecked")
+        CompletableFuture<String> future = (CompletableFuture<String>)
+                interceptor.around(invocation(fixture, "doFutureInnerFail", new Class<?>[0], new Object[0]));
+
+        captured.get(0).run();
+        assertTrue(future.isCompletedExceptionally());
+        ExecutionException ex = assertThrows(ExecutionException.class, future::get);
+        assertEquals("inner-boom", ex.getCause().getMessage());
     }
 
     @Test
