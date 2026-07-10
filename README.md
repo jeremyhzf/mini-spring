@@ -22,8 +22,9 @@ Mini-Spring 是一个面向高级开发者的手写 Spring 教学框架。它不
 | 7-2 | 条件装配 | `@Conditional`/`Condition`、`ConditionEvaluator` 元注解解析、内置 `@ConditionalOnProperty` |
 | 7-3 | 国际化 | `MessageSource`、`ResourceBundleMessageSource`/`StaticMessageSource`、`MessageFormat` 参数替换、`@Autowired` 注入 |
 | 7-4 | 异步 | `@Async`（接口方法）、`AsyncInterceptor`（`AroundAdvice`）、`Executor` 异步执行、`void`/`CompletableFuture` 返回 |
+| 7-5 | 事务 | `@Transactional`、`PlatformTransactionManager`/`SimpleTransactionManager`、`TransactionInterceptor`、REQUIRED/REQUIRES_NEW 传播、回滚规则 |
 
-> 阶段 7 的事件机制、条件装配、国际化与异步已实现；其余高级特性（事务）见 [路线图](#-路线图)，尚未实现。
+> 阶段 7 全部高级特性（事件、条件装配、国际化、异步、事务）已实现。
 
 ## 🛠 技术栈
 
@@ -77,6 +78,10 @@ mini-spring/
 │   ├── async/                    # 异步（阶段 7-4）
 │   │   ├── Async（注解）
 │   │   └── AsyncInterceptor（AroundAdvice，提交 Executor）
+│   ├── transaction/              # 事务（阶段 7-5）
+│   │   ├── Transactional / Propagation / TransactionStatus / PlatformTransactionManager
+│   │   ├── SimpleTransactionManager（ThreadLocal 事务栈，逻辑事务）
+│   │   └── TransactionInterceptor（AroundAdvice，事务边界）
 │   └── samples/                  # 各阶段示例（按阶段分包，每个含一个 *Demo 入口）
 │       ├── ioc/                          # 阶段1 BeanContainerDemo
 │       ├── di/                           # 阶段2 DependencyInjectionDemo
@@ -87,7 +92,8 @@ mini-spring/
 │       ├── event/                        # 阶段7-1 EventDemo（UserService / 事件 / 监听器）
 │       ├── conditional/                  # 阶段7-2 ConditionalDemo（BasicService / PremiumService）
 │       ├── messagesource/                # 阶段7-3 MessageSourceDemo（GreetingService）
-│       └── async/                        # 阶段7-4 AsyncDemo（NotificationService）
+│       ├── async/                        # 阶段7-4 AsyncDemo（NotificationService）
+│       └── transaction/                  # 阶段7-5 TransactionalDemo（TransferService）
 ├── src/test/java/com/minispring/         # 各阶段单元测试 + 集成测试
 └── docs/
     ├── plans/                            # 各阶段实施计划
@@ -145,6 +151,9 @@ mvn compile exec:java -Dexec.mainClass="com.minispring.samples.messagesource.Mes
 
 # 阶段7-4 异步
 mvn compile exec:java -Dexec.mainClass="com.minispring.samples.async.AsyncDemo"
+
+# 阶段7-5 事务
+mvn compile exec:java -Dexec.mainClass="com.minispring.samples.transaction.TransactionalDemo"
 ```
 
 ## 📖 核心用法
@@ -275,7 +284,7 @@ mvn test        # 运行全部测试
 | 7-2 | 条件装配（@Conditional / @ConditionalOnProperty） | ✅ 已完成 |
 | 7-3 | 国际化（MessageSource / 多 locale / 参数替换） | ✅ 已完成 |
 | 7-4 | 异步（@Async / AsyncInterceptor） | ✅ 已完成 |
-| 7 | 事务 `@Transactional` | ⏳ 计划中 |
+| 7-5 | 事务（@Transactional / 传播 / 回滚规则） | ✅ 已完成 |
 
 ## 🎯 学习目标
 
