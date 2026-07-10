@@ -71,8 +71,9 @@ mvn compile exec:java -Dexec.mainClass="com.minispring.samples.event.EventDemo"
 ## 文档
 
 - `docs/plans/` —— 各阶段实施计划
-- `docs/phases/` —— 各阶段完成检查清单
+- `docs/phases/` —— 各阶段完成检查清单（含 `phase07-overview.md` 阶段 7 五大高级特性总览）
 - `docs/superpowers/specs/` 与 `docs/superpowers/plans/` —— 新特性的设计 spec 与实现计划（阶段 7-1～7-5 均经 brainstorming → spec → plan → TDD 实现 流程产出，可作后续特性模板）
+- `docs/future-enhancements.md` —— 后期增强与拓展方向（各特性 YAGNI 项 + 跨特性拓展 + 优先级）
 
 ## 后续方向
 
